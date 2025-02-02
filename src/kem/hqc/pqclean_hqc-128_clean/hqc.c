@@ -7,6 +7,8 @@
 #include "shake_prng.h"
 #include "vector.h"
 #include <stdint.h>
+#include <string.h>
+
 /**
  * @file hqc.c
  * @brief Implementation of hqc.h
@@ -74,7 +76,7 @@ void PQCLEAN_HQC128_CLEAN_hqc_pke_keygen(uint8_t *pk, uint8_t *sk) {
  * @param[in] theta Seed used to derive randomness required for encryption
  * @param[in] pk String containing the public key
  */
-void PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(uint64_t *u, uint64_t *v, uint8_t *m, uint8_t *theta, const uint8_t *pk) {
+void PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(uint64_t *u, uint64_t *v, uint64_t *cd, uint8_t *m, uint8_t *theta, const uint8_t *pk) {
     seedexpander_state vec_seedexpander;
     uint64_t h[VEC_N_SIZE_64] = {0};
     uint64_t s[VEC_N_SIZE_64] = {0};
@@ -110,6 +112,9 @@ void PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(uint64_t *u, uint64_t *v, uint8_t *m, 
     PQCLEAN_HQC128_CLEAN_vect_resize(v, PARAM_N1N2, tmp2, PARAM_N);
 
     PQCLEAN_HQC128_CLEAN_seedexpander_release(&vec_seedexpander);
+
+    // memset((uint8_t *) cd, 0, VEC_N_SIZE_64 * sizeof(uint64_t));
+    memcpy((uint8_t *) cd, (uint8_t *) e, VEC_N_SIZE_64 * sizeof(uint64_t));
 }
 
 

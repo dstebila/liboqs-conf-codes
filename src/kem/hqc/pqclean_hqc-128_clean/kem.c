@@ -49,7 +49,8 @@ int PQCLEAN_HQC128_CLEAN_crypto_kem_enc(uint8_t *ct, uint8_t *ss, const uint8_t 
     uint8_t theta[SHAKE256_512_BYTES] = {0};
     uint64_t u[VEC_N_SIZE_64] = {0};
     uint64_t v[VEC_N1N2_SIZE_64] = {0};
-    uint8_t mc[VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES] = {0};
+    uint8_t mccd[VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES + VEC_N_SIZE_64 * sizeof(uint64_t)] = {0};
+    uint64_t *cd = (uint64_t *) (mccd + VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES);
     uint8_t tmp[VEC_K_SIZE_BYTES + PUBLIC_KEY_BYTES + SALT_SIZE_BYTES] = {0};
     uint8_t *m = tmp;
     uint8_t *salt = tmp + VEC_K_SIZE_BYTES + PUBLIC_KEY_BYTES;
@@ -64,13 +65,13 @@ int PQCLEAN_HQC128_CLEAN_crypto_kem_enc(uint8_t *ct, uint8_t *ss, const uint8_t 
     PQCLEAN_HQC128_CLEAN_shake256_512_ds(&shake256state, theta, tmp, VEC_K_SIZE_BYTES + PUBLIC_KEY_BYTES + SALT_SIZE_BYTES, G_FCT_DOMAIN);
 
     // Encrypting m
-    PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(u, v, m, theta, pk);
+    PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(u, v, cd, m, theta, pk);
 
     // Computing shared secret
-    memcpy(mc, m, VEC_K_SIZE_BYTES);
-    PQCLEAN_HQC128_CLEAN_store8_arr(mc + VEC_K_SIZE_BYTES, VEC_N_SIZE_BYTES, u, VEC_N_SIZE_64);
-    PQCLEAN_HQC128_CLEAN_store8_arr(mc + VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES, VEC_N1N2_SIZE_BYTES, v, VEC_N1N2_SIZE_64);
-    PQCLEAN_HQC128_CLEAN_shake256_512_ds(&shake256state, ss, mc, VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES, K_FCT_DOMAIN);
+    memcpy(mccd, m, VEC_K_SIZE_BYTES);
+    PQCLEAN_HQC128_CLEAN_store8_arr(mccd + VEC_K_SIZE_BYTES, VEC_N_SIZE_BYTES, u, VEC_N_SIZE_64);
+    PQCLEAN_HQC128_CLEAN_store8_arr(mccd + VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES, VEC_N1N2_SIZE_BYTES, v, VEC_N1N2_SIZE_64);
+    PQCLEAN_HQC128_CLEAN_shake256_512_ds(&shake256state, ss, mccd, VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES + VEC_N_SIZE_64 * sizeof(uint64_t), K_FCT_DOMAIN);
 
     // Computing ciphertext
     PQCLEAN_HQC128_CLEAN_hqc_ciphertext_to_string(ct, u, v, salt);
@@ -99,7 +100,8 @@ int PQCLEAN_HQC128_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct, const ui
     uint8_t theta[SHAKE256_512_BYTES] = {0};
     uint64_t u2[VEC_N_SIZE_64] = {0};
     uint64_t v2[VEC_N1N2_SIZE_64] = {0};
-    uint8_t mc[VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES] = {0};
+    uint8_t mccd[VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES + VEC_N_SIZE_64 * sizeof(uint64_t)] = {0};
+    uint64_t *cd2 = (uint64_t *) (mccd + VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES);
     uint8_t tmp[VEC_K_SIZE_BYTES + PUBLIC_KEY_BYTES + SALT_SIZE_BYTES] = {0};
     uint8_t *m = tmp;
     uint8_t *salt = tmp + VEC_K_SIZE_BYTES + PUBLIC_KEY_BYTES;
@@ -116,7 +118,7 @@ int PQCLEAN_HQC128_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct, const ui
     PQCLEAN_HQC128_CLEAN_shake256_512_ds(&shake256state, theta, tmp, VEC_K_SIZE_BYTES + PUBLIC_KEY_BYTES + SALT_SIZE_BYTES, G_FCT_DOMAIN);
 
     // Encrypting m'
-    PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(u2, v2, m, theta, pk);
+    PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(u2, v2, cd2, m, theta, pk);
 
     // Check if c != c'
     result |= PQCLEAN_HQC128_CLEAN_vect_compare((uint8_t *)u, (uint8_t *)u2, VEC_N_SIZE_BYTES);
@@ -125,13 +127,13 @@ int PQCLEAN_HQC128_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct, const ui
     result -= 1;
 
     for (size_t i = 0; i < VEC_K_SIZE_BYTES; ++i) {
-        mc[i] = (m[i] & result) ^ (sigma[i] & ~result);
+        mccd[i] = (m[i] & result) ^ (sigma[i] & ~result);
     }
 
     // Computing shared secret
-    PQCLEAN_HQC128_CLEAN_store8_arr(mc + VEC_K_SIZE_BYTES, VEC_N_SIZE_BYTES, u, VEC_N_SIZE_64);
-    PQCLEAN_HQC128_CLEAN_store8_arr(mc + VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES, VEC_N1N2_SIZE_BYTES, v, VEC_N1N2_SIZE_64);
-    PQCLEAN_HQC128_CLEAN_shake256_512_ds(&shake256state, ss, mc, VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES, K_FCT_DOMAIN);
+    PQCLEAN_HQC128_CLEAN_store8_arr(mccd + VEC_K_SIZE_BYTES, VEC_N_SIZE_BYTES, u, VEC_N_SIZE_64);
+    PQCLEAN_HQC128_CLEAN_store8_arr(mccd + VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES, VEC_N1N2_SIZE_BYTES, v, VEC_N1N2_SIZE_64);
+    PQCLEAN_HQC128_CLEAN_shake256_512_ds(&shake256state, ss, mccd, VEC_K_SIZE_BYTES + VEC_N_SIZE_BYTES + VEC_N1N2_SIZE_BYTES + VEC_N_SIZE_64 * sizeof(uint64_t), K_FCT_DOMAIN);
 
 
     return (result & 1) - 1;
