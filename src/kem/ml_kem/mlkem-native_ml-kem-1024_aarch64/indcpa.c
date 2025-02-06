@@ -359,6 +359,7 @@ void indcpa_keypair_derand(uint8_t pk[MLKEM_INDCPA_PUBLICKEYBYTES],
 
 MLKEM_NATIVE_INTERNAL_API
 void indcpa_enc(uint8_t c[MLKEM_INDCPA_BYTES],
+                uint8_t cd[MLKEM_INDCPA_CODEBYTES],
                 const uint8_t m[MLKEM_INDCPA_MSGBYTES],
                 const uint8_t pk[MLKEM_INDCPA_PUBLICKEYBYTES],
                 const uint8_t coins[MLKEM_SYMBYTES])
@@ -423,6 +424,19 @@ void indcpa_enc(uint8_t c[MLKEM_INDCPA_BYTES],
   poly_reduce(&v);
 
   pack_ciphertext(c, &b, &v);
+
+#ifdef MLKEM_INDCPA_CONFIRMATION_CODE_FULL
+  polyvec_tobytes(cd, &ep);
+  poly_tobytes(&cd[MLKEM_POLYVECBYTES], &epp);
+#elif defined(MLKEM_INDCPA_CONFIRMATION_CODE_TWO_COEFFS)
+  for (size_t i = 0; i < MLKEM_K; i++) {
+    memcpy(cd + i * 2 * sizeof(int16_t), (uint8_t *) &(ep.vec[i].coeffs[0]), sizeof(int16_t));
+    memcpy(cd + i * 2 * sizeof(int16_t) + sizeof(int16_t), (uint8_t *) &(ep.vec[i].coeffs[MLKEM_N - 1]), sizeof(int16_t));
+  }
+  memcpy(cd + MLKEM_K * 2 * sizeof(int16_t), (uint8_t *) &(epp.coeffs[0]), sizeof(int16_t));
+  memcpy(cd + MLKEM_K * 2 * sizeof(int16_t) + sizeof(int16_t), (uint8_t *) &(epp.coeffs[MLKEM_N - 1]), sizeof(int16_t));
+#endif
+
 }
 
 MLKEM_NATIVE_INTERNAL_API
