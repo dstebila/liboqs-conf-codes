@@ -114,8 +114,7 @@ void PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(uint64_t *u, uint64_t *v, uint64_t *cd
 
     PQCLEAN_HQC128_CLEAN_seedexpander_release(&vec_seedexpander);
 
-    // memset((uint8_t *) cd, 0, CONF_CODE_NUM_COEFFS * sizeof(uint64_t));
-    memcpy((uint8_t *) cd, (uint8_t *) s_times_r2_plus_e, CONF_CODE_NUM_COEFFS * sizeof(uint64_t));
+    cd[0] = ((uint8_t *)  s_times_r2_plus_e)[VEC_N_SIZE_64 * sizeof(uint64_t) - 1];
 }
 
 
