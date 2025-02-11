@@ -71,7 +71,6 @@
 #define VEC_N1N2_SIZE_BYTES                   CEIL_DIVIDE(PARAM_N1N2, 8)
 
 #define VEC_N_SIZE_64                         CEIL_DIVIDE(PARAM_N, 64)
-#define CONF_CODE_NUM_COEFFS                  5
 #define VEC_K_SIZE_64                         CEIL_DIVIDE(PARAM_K, 8)
 #define VEC_N1_SIZE_64                        CEIL_DIVIDE(PARAM_N1, 8)
 #define VEC_N1N2_SIZE_64                      CEIL_DIVIDE(PARAM_N1N2, 64)
