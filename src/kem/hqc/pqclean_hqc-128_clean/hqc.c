@@ -85,6 +85,7 @@ void PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(uint64_t *u, uint64_t *v, uint64_t *cd
     uint64_t e[VEC_N_SIZE_64] = {0};
     uint64_t tmp1[VEC_N_SIZE_64] = {0};
     uint64_t tmp2[VEC_N_SIZE_64] = {0};
+    uint64_t s_times_r2_plus_e[VEC_N_SIZE_64] = {0};
 
     // Create seed_expander from theta
     PQCLEAN_HQC128_CLEAN_seedexpander_init(&vec_seedexpander, theta, SEED_BYTES);
@@ -106,15 +107,15 @@ void PQCLEAN_HQC128_CLEAN_hqc_pke_encrypt(uint64_t *u, uint64_t *v, uint64_t *cd
     PQCLEAN_HQC128_CLEAN_vect_resize(tmp1, PARAM_N, v, PARAM_N1N2);
 
     // Compute v = m.G + s.r2 + e
-    PQCLEAN_HQC128_CLEAN_vect_mul(tmp2, r2, s);
-    PQCLEAN_HQC128_CLEAN_vect_add(tmp2, e, tmp2, VEC_N_SIZE_64);
-    PQCLEAN_HQC128_CLEAN_vect_add(tmp2, tmp1, tmp2, VEC_N_SIZE_64);
+    PQCLEAN_HQC128_CLEAN_vect_mul(s_times_r2_plus_e, r2, s);
+    PQCLEAN_HQC128_CLEAN_vect_add(s_times_r2_plus_e, e, s_times_r2_plus_e, VEC_N_SIZE_64);
+    PQCLEAN_HQC128_CLEAN_vect_add(tmp2, tmp1, s_times_r2_plus_e, VEC_N_SIZE_64);
     PQCLEAN_HQC128_CLEAN_vect_resize(v, PARAM_N1N2, tmp2, PARAM_N);
 
     PQCLEAN_HQC128_CLEAN_seedexpander_release(&vec_seedexpander);
 
-    // memset((uint8_t *) cd, 0, VEC_N_SIZE_64 * sizeof(uint64_t));
-    memcpy((uint8_t *) cd, (uint8_t *) e, VEC_N_SIZE_64 * sizeof(uint64_t));
+    // memset((uint8_t *) cd, 0, CONF_CODE_NUM_COEFFS * sizeof(uint64_t));
+    memcpy((uint8_t *) cd, (uint8_t *) s_times_r2_plus_e, CONF_CODE_NUM_COEFFS * sizeof(uint64_t));
 }
 
 
