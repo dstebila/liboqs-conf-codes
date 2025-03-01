@@ -426,15 +426,15 @@ void indcpa_enc(uint8_t c[MLKEM_INDCPA_BYTES],
   pack_ciphertext(c, &b, &v);
 
 #ifdef MLKEM_INDCPA_CONFIRMATION_CODE_FULL
-  polyvec_tobytes(cd, &ep);
-  poly_tobytes(&cd[MLKEM_POLYVECBYTES], &epp);
+  polyvec_tobytes(cd, &b);
+  poly_tobytes(&cd[MLKEM_POLYVECBYTES], &v);
 #elif defined(MLKEM_INDCPA_CONFIRMATION_CODE_TWO_COEFFS)
   for (size_t i = 0; i < MLKEM_K; i++) {
-    memcpy(cd + i * 2 * sizeof(int16_t), (uint8_t *) &(ep.vec[i].coeffs[0]), sizeof(int16_t));
-    memcpy(cd + i * 2 * sizeof(int16_t) + sizeof(int16_t), (uint8_t *) &(ep.vec[i].coeffs[MLKEM_N - 1]), sizeof(int16_t));
+    memcpy(cd + i * 2 * sizeof(int16_t), (uint8_t *) &(b.vec[i].coeffs[0]), sizeof(int16_t));
+    memcpy(cd + i * 2 * sizeof(int16_t) + sizeof(int16_t), (uint8_t *) &(b.vec[i].coeffs[MLKEM_N - 1]), sizeof(int16_t));
   }
-  memcpy(cd + MLKEM_K * 2 * sizeof(int16_t), (uint8_t *) &(epp.coeffs[0]), sizeof(int16_t));
-  memcpy(cd + MLKEM_K * 2 * sizeof(int16_t) + sizeof(int16_t), (uint8_t *) &(epp.coeffs[MLKEM_N - 1]), sizeof(int16_t));
+  memcpy(cd + MLKEM_K * 2 * sizeof(int16_t), (uint8_t *) &(v.coeffs[0]), sizeof(int16_t));
+  memcpy(cd + MLKEM_K * 2 * sizeof(int16_t) + sizeof(int16_t), (uint8_t *) &(v.coeffs[MLKEM_N - 1]), sizeof(int16_t));
 #endif
 
 }
